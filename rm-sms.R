@@ -1,0 +1,7 @@
+rm = read_excel('C:/Users/fe/Downloads/experiment costing (1).xlsm', sheet = 'rm', range = 'A11:s280')
+library(readxl)
+str(rm)
+summary(rm)
+library(dplyr)
+library(corrplot)
+rm %>% select_if(is.numeric) %>% cor() %>% corrplot()
