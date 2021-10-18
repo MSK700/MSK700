@@ -1,0 +1,196 @@
+---
+title: "
+author: ""
+date: ""
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+##Assignment I DRAFT
+
+**1. What does the dataset refer to? Why was it collected? How was it collected? What was the context?**
+
+The provided dataset represents results of public opinion research, which was conducted in Ireland after the Second Referendum on the Treaty of Lisbon in 2009. Following several unsuccessful attempts to ratify several EU treaties in the past (referendums on the Treaty of Nice in 2001 and on the Treaty of Lisbon in 2008), in the second referendum citizens of Ireland voted in favor of the Treaty of Lisbon on 2nd October 2009.Regarding the outcomes of referendums and public "U-turn", it is important to understand the Irish attitudes and behaviour rationale,in order to address the issue of public support for the European integration correctly. The data was collected using public opinion pool surveys and participants were asked to fill in the questions. The answers were merged into the dataset (electronic csv file). Thus, the dataset includes the results of different questionaries which have been asked by the participants related to their attitudes and voting patterns during the Second Referendum on the Treaty of Lisbon. Therefore, the dataset enables to measure wide array of participants' attitudes, ranging from sense of national and European identity and their preferences, as well as to depict interrelation of voting behaviour and demographic features (e.g.age, sex, status etc.).
+
+**2. According to the data, how many people voted In Favour of the Treaty of Lisbon in the referendum held in October 2009, and how many voted against Against ? Present a table which shows numbers and percentages. Present an appropriate plot.**
+
+#Reading the dataset:
+
+```{r}
+data=read.csv(file.choose(), header=T, sep=",")
+```
+
+#Cleaning the data and omiting NA values in the dataset:
+```{r}
+sum(is.na(data))
+data=na.omit(data)
+```
+#Converting "q1b" variable into a factor variable. It has 2 levels: '2' voted in favour,  '3' voted against:
+
+```{r}
+data$q1b <- factor(data$q1b,
+levels = c(2,3),
+labels = c("favor", "against"))
+```
+
+#Creating a table which indicates number and percentage of citizens who voted in favor or against:
+
+```{r}
+tbl <- table(data$q1b)
+res <- cbind(tbl,round(prop.table(tbl)*100,2))
+colnames(res) <- c('Count','Percentage')
+kable(res)
+```
+From the table it is evident that 406 participants (or 63.84%) voted in favor of the treaty, and 230 (or 36.16%) voted against it.
+
+#Presenting a plot:
+
+```{r}
+barplot(tbl, xlab='Voting Status',ylab='Frequency',main="Voting Status for Lisbon Treaty",
+col=c("lightgreen","lightcyan")
+,legend=rownames(tbl), args.legend = list(x = "topright"))
+```
+
+**3. What was the average age of people who voted In Favour and people who voted Against. Plot the distribution of age for both the In Favour and Against voters on the same plot**
+
+#Presenting a table which indicates participants preferences according to age range:
+
+```{r}
+library(dplyr)
+
+data %>%
+  group_by(q1b) %>%
+  summarise_at(vars(age), funs(mean(., na.rm=TRUE)))
+```
+The results suggest that the average of participants who voted in favor of the treaty was '5' (35-49 age range), and the average of participants who voted against the treaty was '4' (25-34 age range).
+
+#Plotting distribution of age for both the In Favour and Against voters 
+
+#First, it is necessary to Change variable into factor variable:
+
+Considering that age is continuous variable, there is a risk that the information might be interpeted incorrectly or that some information might be lost. Thus, it is necessary to transform age variable into factor variable
+
+```{r}
+data$age <- factor(data$age,
+levels = c(2,3,4,5,6,7),
+labels = c("18-21", "22-24","25-34","35-49","50-64","65+"))
+```
+
+#Second, suggesting plot for voting preferences and age interrelation
+
+```{r}
+attach(data)
+library(ggplot2)
+d=ggplot(data, aes(x =age ,y=age, fill= q1b))+coord_flip() + geom_bar(stat="identity")+facet_grid(q1b)+
+labs(title="Voting Status By Age" 
+,y="Freq \nTable 5.1")
+d + labs(fill = "Voting Status")
+```
+From the table it is possible to indicate voting patterns attributed to certain age groups. It is evident that participant who belong to the age range of 50-64 were the most supportive and voted in favor of the treaty. However, participants who belong to the age range of 35-49 were the least supportive and voted agains. Thus, distribution of age for both groups suggest better undestanding of voting prefferences in certain aga groups.
+
+**4. Plot the percentage of people voting In Favour and Against for each socio-economic class**
+
+#Transforming socio-economic variable 'q20' into factor variable:
+
+```{r}
+data$q20 <- factor(data$q20,
+levels = c(2,3,4,5,6),
+labels = c("Very Good", "Fairly Good","Fairly Bad","Very Bad","Don't know"))
+```
+
+#Plotting voting preferences according to socio-economic status:
+
+```{r}
+c=ggplot(data, aes(x= q20,  group=q1b)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+    geom_text(aes( label = scales::percent(..prop..),
+                   y= ..prop.. ), stat= "count", vjust = -.5) +
+    labs(title="Voting Status By Socio-Economic Status",y = "Percent", x="Socio-Economic Status", fill="q20") +
+    facet_grid(q1b) +
+    scale_y_continuous(labels = scales::percent)
+c + labs(fill = "Socio-Economic")
+```
+
+**5. How did the proportion voting In Favour and Against vary by education level?**
+
+#First, transforming finished education variable 'tea' into factor variable:
+
+Values of education level variable are assigned to labels, which, according codebook, indicates primary, secondary, third level and continous studies meanings.
+
+```{r}
+data$tea <- factor(data$tea,
+levels = c(2,3,4,5),
+labels = c("Primary", "Secondary","Third Level","Still Studying"))
+```
+
+#Second, identifying voting status by education level
+
+The table bellow suggests voting preferences according to identified education levels.
+
+```{r}
+b=ggplot(data, aes(x= tea,  group=q1b)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+    geom_text(aes( label = scales::percent(..prop..),
+                   y= ..prop.. ), stat= "count", vjust = -.5) +
+    labs(title="Voting Status By Education Level",y = "Percent", x="Education Level", fill="tea") +
+    facet_grid(q1b) +
+    scale_y_continuous(labels = scales::percent)
+b + labs(fill = "Education level")
+```
+Education levels of voters are displayed into four levels. The table suggests that participants with primary, secondary education, as well as participants who were still still studying, were less supportive and chose to vote agains the treaty. On the contrary, participants with third level education were more supportive and voted in favor of the threaty, compared to the same category who voted agains (35% and 19.6% respectively).
+
+**6. Using a plot, show how the proportion voting In Favour and Against varied by how much knowledge a person reported they had about the European Union. What does that pattern show?**
+
+According to the codebook, variable 'q8' indicates participants knowledge of EU, its policies and institutions, where  ''2' suggests great knowledge, '11' - poor knowledge, and '12' indicates uncertainty.Plot is presented below:
+
+```{r}
+a=ggplot(data, aes(x= q8,  group=q1b)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+    geom_text(aes( label = scales::percent(..prop..),
+                   y= ..prop.. ), stat= "count", vjust = -.5) +
+    labs(title="Voting Status By Knowledge abou EU", y = "Percent", x="Knowledge About European Union", fill="q8") +
+    facet_grid(q1b) +
+    scale_y_continuous(labels = scales::percent)
+a + labs(fill = "EU Knowledge")
+```
+The patterns indicated in the table suggest that both, participants who voted against, and participants who woted in favour of the treaty had mediocre understanding of EU. In addition, voters who know little about the EU still voted in favour of the treaty. This might suggest, that some voters did not know what they were voting about.
+
+**7.Is there a relationship between how much knowledge a person thinks they have about the EU and whether they think Switzerland is a member of the EU? Show this using a plot and describe what, if any, relationship there is**
+
+#Transforming variable 'q9b' into factor variable:
+
+Variable 'q9b' supplements participants knowledge of the EU (variable 'q8'), asking to indicate whether Switzerland is a member of the EU. This variable has several levels, where '2' means true, '3' means false, and '4' indicates uncertainty.
+
+```{r}
+data$q9b <- factor(data$q9b,
+levels = c(2,3,4),
+labels = c("True", "False","Don't Know"))
+```
+
+#Suggesting the plot
+
+Suggested plot that indicates participants' knowledge of the EU (variable 'q8') interrelation with participants knowledge of Switzerland's membership in the EU is provided below.
+
+```{r}
+p=ggplot(data, aes(x= q8,  group=q9b)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..)), stat="count") +
+    geom_text(aes( label = scales::percent(..prop..),
+                   y= ..prop.. ), stat= "count", vjust = -.5) +
+    labs(title="Knowledge about Switzerland vs EU", y = "Percent", x="Knowledge Abou EU", fill="q8") +
+    facet_grid(q9b) +
+    scale_y_continuous(labels = scales::percent)
+p + labs(fill = "Knowledge about EU")
+```
+Considering that Switzerland is not a member of the EU, it is worth to focus on the first element of the table, which indicate participants knowledge of the EU who opposed this fact.It may suggest that participants with sufficient knowledge of the EU do not that Switzerland is not a member of the EU. This may question participants knowledge and idicate participants voting preferences in certain cases do not depend on their knowledge of topics they are asked to vote for. 
+
+```{r show-code, ref.label = all_labels(), echo = TRUE, eval = FALSE}
+```
+
